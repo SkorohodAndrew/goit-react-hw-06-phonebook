@@ -1,36 +1,38 @@
 import { useState } from 'react';
 import { nanoid } from 'nanoid';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
+import { addContact } from '../../redux/contactsSlice';
 
 import { Form, Label, Input, Button } from './FormAddPhone.styled';
 
 const nameId = nanoid(5);
 const numberId = nanoid(8);
 
-export const FormAddPhone = ({
-  onSubmit,
-  onChange,
-  numberValue,
-  nameValue,
-}) => {
+export const FormAddPhone = () => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
-  const addContacts = contact => {
+  const dispatch = useDispatch();
+  const contacts = useSelector(state => state.contact);
+
+  const handleInputChange = contact => {
     contact.preventDefault();
-    if (isDuplicate({ name, number })) {
-      return alert(` Такий ${contact.name} і ${contact.number} вже є`);
-    }
-    setContacts(prev => {
-      const newContact = {
-        id: nanoid(),
-        name,
-        number,
-      };
-      return [...prev, newContact];
-    });
+    isDuplicate();
+    dispatch(addContact(name, number));
     setName('');
     setNumber('');
+  };
+
+  const isDuplicate = ({ name, number }) => {
+    const result = contacts.find(
+      contact => contact.name === name && contact.number === number
+    );
+    if (result({ name, number })) {
+      return alert(` Такий ${name} i ${number} вже є`);
+    }
+
+    return result;
   };
 
   const handleChange = event => {
@@ -38,26 +40,15 @@ export const FormAddPhone = ({
     switch (name) {
       case 'name':
         return setName(value);
-
       case 'number':
         return setNumber(value);
-
       default:
         return;
     }
   };
 
-  const isDuplicate = ({ name, number }) => {
-    // const { contacts } = this.state;
-    const result = contacts.find(
-      contact => contact.name === name && contact.number === number
-    );
-
-    return result;
-  };
-
   return (
-    <Form onSubmit={addContacts}>
+    <Form onSubmit={handleInputChange}>
       <div>
         <Label htmlFor={nameId}>Name</Label>
         <Input
@@ -66,7 +57,7 @@ export const FormAddPhone = ({
           type="text"
           pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
           title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-          value={nameValue}
+          value={name}
           onChange={handleChange}
           required
         />
@@ -80,7 +71,7 @@ export const FormAddPhone = ({
           type="tel"
           pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
           title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-          value={numberValue}
+          value={number}
           onChange={handleChange}
           required
         />
