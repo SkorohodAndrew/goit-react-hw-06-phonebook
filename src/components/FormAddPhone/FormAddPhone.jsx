@@ -1,78 +1,78 @@
-import { useState } from 'react';
 import { nanoid } from 'nanoid';
+import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import PropTypes from 'prop-types';
 import { addContact } from '../../redux/contactsSlice';
-
+import { getContacts } from '../../redux/selectors';
 import { Form, Label, Input, Button } from './FormAddPhone.styled';
 
-const nameId = nanoid(5);
-const numberId = nanoid(8);
+const nameInputId = nanoid(5);
+const numberInputId = nanoid(8);
 
 export const FormAddPhone = () => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
+  const contacts = useSelector(getContacts);
   const dispatch = useDispatch();
-  const contacts = useSelector(state => state.contact);
 
-  const handleInputChange = contact => {
-    contact.preventDefault();
-    isDuplicate();
-    dispatch(addContact(name, number));
-    setName('');
-    setNumber('');
+  const handleInputChange = e => {
+    const { name, value } = e.currentTarget;
+
+    switch (name) {
+      case 'number':
+        return setNumber(value);
+      case 'name':
+        return setName(value);
+      default:
+        return;
+    }
   };
 
-  const isDuplicate = ({ name, number }) => {
+  const chekingContacts = () => {
     const result = contacts.find(
       contact => contact.name === name && contact.number === number
     );
-    if (result({ name, number })) {
+    if (result) {
       return alert(` Такий ${name} i ${number} вже є`);
     }
 
     return result;
   };
 
-  const handleChange = event => {
-    const { name, value } = event.target;
-    switch (name) {
-      case 'name':
-        return setName(value);
-      case 'number':
-        return setNumber(value);
-      default:
-        return;
-    }
+  const handleSubmit = e => {
+    e.preventDefault();
+    chekingContacts();
+    dispatch(addContact(name, number));
+    setName('');
+    setNumber('');
   };
 
   return (
-    <Form onSubmit={handleInputChange}>
+    <Form onSubmit={handleSubmit}>
       <div>
-        <Label htmlFor={nameId}>Name</Label>
+        <Label htmlFor={nameInputId}>Name</Label>
         <Input
-          id={nameId}
+          id={nameInputId}
           name="name"
           type="text"
           pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
           title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
           value={name}
-          onChange={handleChange}
+          onChange={handleInputChange}
           required
         />
       </div>
 
       <div>
-        <Label htmlFor={numberId}>Number</Label>
+        <Label htmlFor={numberInputId}>Number</Label>
         <Input
-          id={numberId}
+          id={numberInputId}
           name="number"
           type="tel"
           pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
           title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
           value={number}
-          onChange={handleChange}
+          onChange={handleInputChange}
           required
         />
       </div>
@@ -81,8 +81,4 @@ export const FormAddPhone = () => {
       </div>
     </Form>
   );
-};
-
-FormAddPhone.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
 };
